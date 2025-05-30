@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity History - CalorieTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#81C784'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#F1F8E9] min-h-screen">
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="{{ url_for('home') }}" class="text-2xl font-['Pacifico'] text-primary">CalorieCalender</a>
+            </div>
+            <a href="{{ url_for('home') }}" class="text-primary hover:text-secondary transition-colors duration-300">
+                <i class="ri-home-line mr-1"></i> Back to Home
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <!-- Add this after the navigation and before the weekly schedule -->
+    <div class="container mx-auto px-4 pt-24 pb-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Active Days</h3>
+                <p class="text-3xl font-bold text-primary">{{ stats.total_days }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Exercises</h3>
+                <p class="text-3xl font-bold text-primary">{{ stats.total_exercises }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Calories Burned</h3>
+                <p class="text-3xl font-bold text-primary">{{ stats.total_calories }}</p>
+            </div>
+        </div>
+    
+        <!-- Weekly Schedule -->
+        <div class="grid gap-6">
+            {% for day in schedule %}
+            <div class="border rounded-lg p-4">
+                <h2 class="text-xl font-semibold text-primary mb-4">{{ day.day }}</h2>
+                <div class="grid gap-4">
+                    {% for exercise in day.exercises %}
+                    <div class="flex items-center bg-gray-50 p-4 rounded-lg">
+                        <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
+                            <i class="ri-run-line text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="font-medium">{{ exercise.name }}</p>
+                            <div class="text-sm text-gray-600">
+                                <span>{{ exercise.duration }} minutes</span>
+                                <span class="mx-2">•</span>
+                                <span>{{ exercise.calories }} calories burned</span>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ exercise.date }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not day.exercises %}
+                    <p class="text-gray-500 italic">No exercises scheduled for this day</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
