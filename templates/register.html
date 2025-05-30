@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - CalorieCalendar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            background-image: url('https://public.readdy.ai/ai/img_res/f22dcd66603f31bc6f49843ffdabb6fe.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .overlay {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .error {
+            color: red;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="#" class="text-2xl font-['Pacifico'] text-primary">CalorieCalendar</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/login" class="text-primary hover:text-secondary transition-colors duration-300">Login</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="pt-20 min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md overlay">
+            <h2 class="text-2xl font-bold text-primary mb-6">Sign Up</h2>
+            <form id="signupForm" method="POST">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" class="w-full p-2 border rounded focus:ring-2 focus:ring-primary" required>
+                    <p id="usernameError" class="error hidden">Username must contain only letters.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                    <input type="number" id="phone" name="phone" class="w-full p-2 border rounded focus:ring-2 focus:ring-primary" required>
+                    <p id="phoneError" class="error hidden">Phone number must be exactly 10 digits.</p>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" class="w-full p-2 border rounded focus:ring-2 focus:ring-primary pr-10" required>
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 px-3 text-gray-500">
+                            <i class="ri-eye-off-line" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    <p id="passwordError" class="error hidden">Password must contain at least one special character.</p>
+                </div>
+                <button type=submit style="background-color: #4CAF50; color: white; text-align: center; margin-left: 146px; margin-top: 20px; padding: 5px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                    sign up
+                  </button>
+                  
+            </form>
+            <p class="mt-4 text-center text-gray-600">Already have an account? <a href="/login" class="text-primary hover:text-secondary">Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Clear previous error messages
+            document.getElementById('usernameError').classList.add('hidden');
+            document.getElementById('phoneError').classList.add('hidden');
+            document.getElementById('passwordError').classList.add('hidden');
+
+            let isValid = true;
+
+            // Validate username
+            const username = document.getElementById('username').value;
+            if (!/^[a-zA-Z]+$/.test(username)) {
+                document.getElementById('usernameError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            // Validate phone number
+            const phone = document.getElementById('phone').value;
+            if (!/^\d{10}$/.test(phone)) {
+                document.getElementById('phoneError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            // Validate password
+            const password = document.getElementById('password').value;
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                document.getElementById('passwordError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            // If all validations pass, submit the form
+            if (isValid) {
+                alert('Form submitted successfully!');
+                this.submit();
+            }
+        });
+
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            eyeIcon.classList.toggle('ri-eye-line');
+            eyeIcon.classList.toggle('ri-eye-off-line');
+        });
+    </script>
+</body>
+</html>

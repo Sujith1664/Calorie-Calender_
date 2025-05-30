@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalorieTrack - Your Health Journey Starts Here</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#81C784'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    } // Ensure this closing brace matches an opening brace above
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-container {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-container { min-height: 150px; }
+    </style>
+</head>
+<body class="bg-[#F1F8E9] min-h-screen">
+    <div class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="#" class="text-2xl font-['Pacifico'] text-primary">CalorieCalender</a>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#" class="text-primary hover:text-secondary transition-colors duration-300">Home</a>
+                    <a href="{{ url_for('schedule') }}"  class="text-primary hover:text-secondary transition-colors duration-300">View Schedule</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                {% if session["phone"] %}
+                <button id="profileBtn" class="w-10 h-10 flex items-center justify-center">
+                    <img src="https://public.readdy.ai/ai/img_res/4feed2ac58f21cf0035ac6196c5b43fa.jpg" class="w-8 h-8 rounded-full object-cover">
+                </button>
+                {% else %}
+                <a href="/login" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors duration-300">Login</a>
+                <a href="/register" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors duration-300">Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+
+    <div class="pt-20 min-h-screen">
+        <div class="relative h-[300px] bg-cover bg-center" style="background-image: url('https://public.readdy.ai/ai/img_res/f22dcd66603f31bc6f49843ffdabb6fe.jpg')">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/50"></div>
+            <div class="container mx-auto px-4 relative h-full flex items-center">
+                <div class="max-w-2xl text-white">
+                    <h1 class="text-4xl font-bold mb-4">Track Your Calories, Transform Your Life</h1>
+                    <p class="text-lg mb-6">Your personalized journey to a healthier lifestyle starts here. Track meals, monitor progress, and achieve your goals.</p>
+                </div>
+            </div>
+        </div>
+                
+        <!-- Action Buttons - Top Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+            <button id="logMealBtn" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 text-left">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-restaurant-2-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Log Meal</h3>
+                <p class="text-gray-600">Track your food intake and nutrients</p>
+            </button>
+            <button id="addExerciseBtn" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 text-left">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-heart-pulse-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Add Exercise</h3>
+                <p class="text-gray-600">Record your workouts and activities</p>
+            </button>
+            <button id="setGoalsBtn" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 text-left">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-flag-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Set Goals</h3>
+                <p class="text-gray-600">Define and track your health objectives</p>
+            </button>
+        </div>
+                
+        <!-- First Row - 3 Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+            <!-- Modify the Daily Calories Card -->
+            <div class="bg-white rounded-lg p-3 shadow-lg card-container cursor-pointer" onclick="openCalorieGoalModal()">
+                <div class="flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">Daily Calories</h3>
+                        <button onclick="clearCalorieGoal(event)" 
+                                class="p-2 text-gray-500 hover:text-primary transition-colors duration-300">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container flex-grow" id="calorieChart" style="height: 120px;"></div>
+                    <div class="flex items-center justify-center mt-2">
+                        <div class="flex items-baseline">
+                            <span class="text-2xl font-bold text-primary" id="currentCalories">{{ calorie_data.current_calories }}</span>
+                            <span class="text-gray-600 ml-1">/ <span id="calorieGoal">{{ calorie_data.daily_goal }}</span> kcal</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 text-center">Data resets daily at midnight.</p>
+                </div>
+            </div>
+            <!-- Add Calorie Goal Modal -->
+            <div id="calorieGoalModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Set Daily Calorie Goal</h3>
+                    <form action="/set_calorie_goal" method="POST">
+                        <div class="mb-4">
+                            <label for="daily_goal" class="block text-sm font-medium text-gray-700">Daily Calorie Goal</label>
+                            <input type="number" id="daily_goal" name="daily_goal" 
+                                   value="{{ calorie_data.daily_goal }}"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                                   required>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                                Save Goal
+                            </button>
+                            <button type="button" onclick="closeAllModals()" 
+                                    class="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Water Intake Card -->
+            <div class="bg-white rounded-lg p-4 shadow-lg card-container">
+                <div class="flex flex-col h-full">
+                    <h3 class="text-lg font-semibold mb-3">Water Intake Tracker</h3>
+                    <div class="relative w-full h-32 bg-primary/5 rounded-lg mb-3 overflow-hidden">
+                        <div id="waterFillAnimation" class="absolute bottom-0 w-full bg-primary/20 transition-all duration-500 ease-out" style="height: 0%;">
+                            <div class="absolute top-0 left-0 right-0 h-2 bg-primary/30 rounded-full"></div>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-24 flex items-center justify-center">
+                                <i class="ri-water-flash-line text-6xl text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center space-x-4 mb-6">
+                        <button onclick="logWater(-1)" class="p-3 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors duration-300">
+                            <i class="ri-subtract-line text-xl"></i>
+                        </button>
+                        <div class="flex items-baseline">
+                            <span id="waterCount" class="text-3xl font-bold text-primary">0</span>
+                            <span id="waterGoalDisplay" class="text-lg text-gray-600 ml-2">/ 8 glasses</span>
+                        </div>
+                        <button onclick="logWater(1)" class="p-3 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors duration-300">
+                            <i class="ri-add-line text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-auto">
+                        <button onclick="setWaterGoal()" class="w-3/4 mx-auto bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary transition-colors duration-300">Set Goal</button>
+                        <button onclick="clearWaterData()" class="w-3/4 mx-auto border-2 border-primary text-primary py-2 px-4 rounded-lg hover:bg-primary/10 transition-colors duration-300">Clear Data</button>
+                    </div>
+                </div>
+            </div>
+            
+<!-- Weekly Progress Card -->
+<div class="bg-white rounded-lg p-4 shadow-lg card-container">
+    <div class="flex flex-col h-full">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Weekly Progress</h3>
+            <button onclick="openWeeklyProgressModal()" class="text-primary hover:text-secondary">
+                <i class="ri-fullscreen-line text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <!-- Current Week Summary -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-green-50 rounded-lg p-3">
+                    <p class="text-sm text-gray-600">Week's Intake</p>
+                    <p class="text-xl font-bold text-primary" id="weekTotalIntake">0</p>
+                    <p class="text-xs text-gray-500">calories</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-3">
+                    <p class="text-sm text-gray-600">Week's Burned</p>
+                    <p class="text-xl font-bold text-primary" id="weekTotalBurned">0</p>
+                    <p class="text-xs text-gray-500">calories</p>
+                </div>
+            </div>
+            <!-- Daily Progress -->
+            <div class="space-y-2" id="dailyProgressList">
+                <!-- Daily progress bars will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Progress Modal -->
+<div id="weeklyProgressModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-3xl bg-white rounded-lg shadow-xl p-6">
+        <h3 class="text-lg font-semibold mb-4">Weekly Calories Breakdown</h3>
+        <div id="weeklyCaloriesChart" style="height: 300px;"></div>
+        <button onclick="closeWeeklyProgressModal()" 
+                class="mt-4 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-300">
+            Close
+        </button>
+    </div>
+</div>
+</div>  
+
+        <div class="container mx-auto px-4 py-8 max-w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Recent Meals Card -->
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Recent Meals</h2>
+        <button onclick="clearRecentMeals()" class="text-gray-500 hover:text-primary transition-colors duration-300">
+            <i class="ri-delete-bin-line text-xl"></i>
+        </button>
+    </div>
+    <div id="recentMeals" class="space-y-4 h-[calc(100%-4rem)] overflow-y-auto">
+        <p id="noMealsMessage" class="text-gray-500 italic {% if recent_meals %}hidden{% else %}block{% endif %}">
+            No meals logged yet for today.
+        </p>
+        {% for meal in recent_meals %}
+        <div class="flex items-center p-3 border rounded-lg hover:bg-gray-50">
+            <div class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full">
+                <i class="ri-restaurant-line text-green-600"></i>
+            </div>
+            <div class="ml-4">
+                <p class="font-medium">{{ meal[0] }}</p>
+                <p class="text-sm text-gray-600">{{ meal[1] }} calories</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Activity Timeline Card -->
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-xl font-semibold mb-4">Activity Timeline</h2>
+    <a href="{{ url_for('activity_history') }}" 
+       class="text-primary hover:text-secondary transition-colors duration-300 text-sm">View Full History</a>
+    <div id="activityTimeline" class="space-y-4 h-[calc(100%-6rem)] overflow-y-auto mt-4">
+        <p id="noActivitiesMessage" class="text-gray-500 italic {% if recent_exercises %}hidden{% else %}block{% endif %}">
+            No activities logged yet
+        </p>
+        {% for exercise in recent_exercises %}
+        <div class="flex items-center p-3 border rounded-lg hover:bg-gray-50">
+            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full">
+                <i class="ri-run-line text-primary"></i>
+            </div>
+            <div class="ml-4">
+                <p class="font-medium">{{ exercise[0] }}</p>
+                <p class="text-sm text-gray-600">{{ exercise[1] }} minutes - {{ exercise[2] }} kcal burned</p>
+                <p class="text-xs text-gray-500">{{ exercise[3] }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+            
+                <!-- Streak Card -->
+                <!-- Replace the existing Streak Card sections with this unified version -->
+                <div class="bg-white rounded-lg shadow-lg p-6 cursor-pointer" onclick="showUserStage()">
+                    <h2 class="text-xl font-semibold mb-4">Your Progress</h2>
+                    
+                    
+                    <!-- Average Stats -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <p id="avgDailyCalories" class="text-2xl font-bold text-primary">0</p>
+                            <p class="text-sm text-gray-600">Avg Daily Calories</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <p id="avgDailyBurned" class="text-2xl font-bold text-primary">0</p>
+                            <p class="text-sm text-gray-600">Avg Calories Burned</p>
+                        </div>
+                    </div>
+                    <!-- Monthly Progress section in the streak card -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3">Monthly Summary</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <p id="monthlyCaloriesGained" class="text-2xl font-bold text-primary">0</p>
+                                <p class="text-sm text-gray-600">Total Calories Gained</p>
+                            </div>
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <p id="monthlyCaloriesBurned" class="text-2xl font-bold text-primary">0</p>
+                                <p class="text-sm text-gray-600">Total Calories Burned</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height: 300px; margin-bottom: 20px;">
+                        <canvas id="monthlyProgressChart"></canvas>
+                    </div>
+                    
+                    <!-- Add this new modal for monthly target -->
+                    <div id="monthlyTargetModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Set Monthly Target</h3>
+                            <div class="mb-4">
+                                <label for="monthlyTargetInput" class="block text-sm font-medium text-gray-700">Monthly Calorie Target</label>
+                                <input type="number" id="monthlyTargetInput" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                                       placeholder="Enter target (e.g., 60000)">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setMonthlyTarget()" 
+                                        class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                                    Set Target
+                                </button>
+                                <button onclick="closeAllModals()" 
+                                        class="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+    <!-- Log Meal Modal -->
+    <div id="logMealModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Log Meal</h3>
+                <form method="POST" action="/add-meal">
+                    <label for="meal" class="block mb-2">Choose a meal</label> 
+                    <select name="meal" id="meal" class="w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-primary">
+                        <option value="Banana">Banana</option>
+                        <option value="Apple">Apple</option>
+                        <option value="Rice">Rice</option>
+                        <option value="Chpathi">Chapathi</option>       
+                        <option value="Curd">Curd</option>
+                        <option value="Milk">Milk</option>
+                        <option value="Icecream">Icecream</option>
+                        <option value="GreenMoong">GreenMoong</option>
+                    </select>
+
+                    <input type="number" name="quantity" id="quantity" placeholder="Enter quantity (e.g., 100g)"
+                           class="w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-primary">
+
+                    <div class="flex gap-2">
+                        <button type="submit"
+                                class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                            Add
+                        </button>
+                        <button type="button" onclick="closeAllModals()" 
+                                class="px-4 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Selection Modal -->
+    <div id="exerciseModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Select Exercise</h3>
+            <div class="grid grid-cols-2 gap-3" id="exerciseSuggestions">
+                <!-- Exercise suggestions populated by JS -->
+            </div>
+            <button onclick="closeAllModals()" 
+                    class="w-full mt-4 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+    <!-- Exercise Count Modal -->
+    <div id="exerciseCountModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+        <div>
+            <h3 class="text-lg font-semibold mb-4" id="exerciseTitle"></h3>
+            <input type="number" id="exerciseCount" placeholder="Enter duration/reps" 
+                   class="w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-primary">
+            <div class="flex gap-2">
+                <button onclick="logExercise()" 
+                        class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                    Add Exercise
+                </button>
+                <button onclick="closeAllModals()" 
+                        class="px-4 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Add Exercise Modal -->
+    <div id="addExerciseModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+            <h3 class="text-lg font-semibold mb-4">Log Exercise</h3>
+            <form method="POST" action="/add-exercise">
+                <div class="mb-4">
+                    <label for="exercise_name" class="block text-sm font-medium text-gray-700">Exercise Name</label>
+                    <input type="text" id="exercise_name" name="exercise_name" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label for="duration" class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <input type="number" id="duration" name="duration" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label for="calories_burned" class="block text-sm font-medium text-gray-700">Calories Burned</label>
+                    <input type="number" id="calories_burned" name="calories_burned" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                           required>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                        Log Exercise
+                    </button>
+                    <button type="button" onclick="closeAllModals()" 
+                            class="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Set Goals Modal -->
+    <div id="setGoalsModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] bg-white rounded-lg shadow-xl p-6">
+        <h3 class="text-lg font-semibold mb-6">Set Daily Goals</h3>
+        <div class="space-y-4">
+            <form action="/set_goals" method="POST" class="space-y-4">
+                <!-- Time Slots -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="font-medium">Time</div>
+                    <div class="font-medium">Activity</div>
+                    <div class="font-medium">Goal</div>
+                </div>
+
+                <!-- Morning -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="flex items-center">Morning</div>
+                    <select name="morning_activity" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                        <option value="" disabled selected>Select activity</option>
+                        <option value="Running">Running</option>
+                        <option value="Yoga">Yoga</option>
+                        <option value="Cycling">Cycling</option>
+                        <option value="Meditation">Meditation</option>
+                    </select>
+                    <input type="text" name="morning_goal" value="{{ morning_goal or '' }}" placeholder="Enter goal (e.g., 30 mins)" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                </div>
+
+                <!-- Afternoon -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="flex items-center">Afternoon</div>
+                    <select name="afternoon_activity" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                        <option value="" disabled selected>Select activity</option>
+                        <option value="Swimming">Swimming</option>
+                        <option value="Walking">Walking</option>
+                        <option value="Strength Training">Strength Training</option>
+                        <option value="Stretching">Stretching</option>
+                    </select>
+                    <input type="text" name="afternoon_goal" value="{{ afternoon_goal or '' }}" placeholder="Enter goal (e.g., 1 hour)" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                </div>
+
+                <!-- Evening -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="flex items-center">Evening</div>
+                    <select name="evening_activity" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                        <option value="" disabled selected>Select activity</option>
+                        <option value="Jogging">Jogging</option>
+                        <option value="Pilates">Pilates</option>
+                        <option value="Dancing">Dancing</option>
+                        <option value="Cardio">Cardio</option>
+                    </select>
+                    <input type="text" name="evening_goal" value="{{ evening_goal or '' }}" placeholder="Enter goal (e.g., 45 mins)" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                </div>
+
+                <!-- Night -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="flex items-center">Night</div>
+                    <select name="night_activity" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                        <option value="" disabled selected>Select activity</option>
+                        <option value="Meditation">Meditation</option>
+                        <option value="Stretching">Stretching</option>
+                        <option value="Reading">Reading</option>
+                        <option value="Relaxation">Relaxation</option>
+                    </select>
+                    <input type="text" name="night_goal" value="{{ night_goal or '' }}" placeholder="Enter goal (e.g., 20 mins)" class="p-2 border rounded focus:ring-2 focus:ring-primary">
+                </div>
+
+                <!-- Hidden phone -->
+                <input type="hidden" name="phone" value="{{ phone }}">
+
+                <!-- Buttons -->
+                <div class="flex gap-2 mt-6">
+                    <button type="submit" class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">Set Goals</button>
+                    <button type="submit" name="clear" value="1" class="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">Clear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Profile Modal -->
+<!-- Profile Modal -->
+<div id="profileModal" class="hidden fixed inset-0 bg-black/50 z-[60]">
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+        <h3 class="text-lg font-semibold mb-6">Profile Settings</h3>
+        
+        <!-- Profile Photo -->
+        <div class="flex flex-col items-center mb-6">
+            <img id="profilePhoto" src="{{ profile_photo or 'https://public.readdy.ai/ai/img_res/4feed2ac58f21cf0035ac6196c5b43fa.jpg' }}" 
+                 class="w-24 h-24 rounded-full object-cover mb-4">
+            <input type="file" id="photoUpload" name="profile_photo" class="hidden" accept="image/*">
+            <button onclick="document.getElementById('photoUpload').click()" 
+                    class="bg-primary/10 text-primary px-4 py-2 rounded hover:bg-primary/20 transition-colors duration-300">
+                Change Photo
+            </button>
+        </div>
+
+        <!-- Form Section -->
+        <form action="/save" method="POST" enctype="multipart/form-data" id="profileForm">
+            <input type="hidden" name="photo_data" id="photoData">
+            <input type="hidden" name="current_username" value="{{ username }}">
+            
+            <!-- Username -->
+            <div class="mb-4">
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <input type="text" id="username" name="username"
+                       value="{{ username or '' }}"
+                       class="w-full p-2 border rounded focus:ring-2 focus:ring-primary">
+            </div>
+
+            <!-- Password -->
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password"
+                           value="{{ password or '' }}"
+                           class="w-full p-2 border rounded focus:ring-2 focus:ring-primary pr-10">
+                    <a id="togglePasswordVisibility" class="absolute right-3 top-2 p-1 text-gray-600 hover:text-primary transition-colors duration-300 cursor-pointer"> 
+                        <i id="eyeIcon" class="ri-eye-line"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                    Save
+                </button>
+                <button type="button" onclick="closeAllModals()" 
+                        class="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 transition-colors duration-300">
+                    Close
+                </button>
+            </div>
+        </form>
+
+        <!-- Logout Button -->
+        <div class="mt-6 flex justify-center">
+            <button onclick="logout()" 
+                    class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 transition-colors duration-300 w-1/2">
+                Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearRecentMeals() {
+    if (confirm('Are you sure you want to remove all recent meals?')) {
+        fetch('/clear_meals', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to clear meals. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing meals.');
+        });
+    }
+}
+          document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/monthly-progress')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('monthlyProgressChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.chart_data.dates.map(date => date.split('-')[2]), // Show only day numbers
+                        datasets: [{
+                            label: 'Calories Gained',
+                            data: data.chart_data.calories,
+                            borderColor: '#2E7D32',
+                            backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }, {
+                            label: 'Calories Burned',
+                            data: data.chart_data.burned,
+                            borderColor: '#FF5722',
+                            backgroundColor: 'rgba(255, 87, 34, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#000',
+                                bodyColor: '#666',
+                                borderColor: '#ddd',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    });
+    document.getElementById('photoUpload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const newPhotoSrc = e.target.result;
+            document.getElementById('profilePhoto').src = newPhotoSrc;
+            document.getElementById('photoData').value = newPhotoSrc;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('profileForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/save', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update both profile images
+            const newPhotoSrc = document.getElementById('profilePhoto').src;
+            document.getElementById('profileBtn').querySelector('img').src = newPhotoSrc;
+            closeAllModals();
+        } else {
+            alert('Failed to save changes. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Saved Successfully');
+    });
+});
+
+
+    function updateWeeklyCard() {
+        fetch('/api/weekly-calories')
+            .then(response => response.json())
+            .then(data => {
+                // Update total numbers
+                const totalIntake = data.calories_intake.reduce((a, b) => a + b, 0);
+                const totalBurned = data.calories_burned.reduce((a, b) => a + b, 0);
+                document.getElementById('weekTotalIntake').textContent = totalIntake;
+                document.getElementById('weekTotalBurned').textContent = totalBurned;
+
+                // Update daily progress bars
+                const progressList = document.getElementById('dailyProgressList');
+                progressList.innerHTML = '';
+
+                data.days.forEach((day, index) => {
+                    const dayName = day.split(',')[0];
+                    const intake = data.calories_intake[index];
+                    const burned = data.calories_burned[index];
+                    const maxValue = Math.max(intake, burned, 2000); // Use 2000 as minimum scale
+
+                    const progressHTML = `
+                        <div class="text-xs text-gray-600 flex items-center gap-2">
+                            <span class="w-12">${dayName}</span>
+                            <div class="flex-1 relative h-4 bg-gray-100 rounded">
+                                <div class="absolute inset-y-0 left-0 bg-green-200 rounded" 
+                                     style="width: ${(intake/maxValue)*100}%"></div>
+                                <div class="absolute inset-y-0 left-0 bg-orange-200 rounded" 
+                                     style="width: ${(burned/maxValue)*100}%; opacity: 0.7"></div>
+                            </div>
+                            <span class="w-16 text-right">${intake}/${burned}</span>
+                        </div>
+                    `;
+                    progressList.insertAdjacentHTML('beforeend', progressHTML);
+                });
+            })
+            .catch(error => console.error('Error updating weekly card:', error));
+    }
+
+    // Add this to your DOMContentLoaded event listener
+    document.addEventListener("DOMContentLoaded", function() {
+        updateWeeklyCard();
+        // Update every 5 minutes
+        setInterval(updateWeeklyProgress, 300000);
+        updateWeeklyProgress();
+    });
+         function clearCalorieGoal(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const caloriesToRemove = prompt("Enter the number of calories to remove:");
+    if (!caloriesToRemove || isNaN(caloriesToRemove) || caloriesToRemove <= 0) {
+        alert("Please enter a valid number of calories.");
+        return;
+    }
+
+    fetch('/clear_calorie_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ calories_to_remove: parseInt(caloriesToRemove) })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("Calories removed successfully!");
+            location.reload(); // Reload the page to update the UI
+        } else {
+            alert("Failed to remove calories. Please try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+        // Water tracking functionality
+        let waterGoal = localStorage.getItem("waterGoal") || 8;
+        let waterCount = localStorage.getItem("waterCount") || 0;
+        let goalReached = false;
+
+        function logWater(amount) {
+            waterCount = Math.max(0, parseInt(waterCount) + amount);
+            localStorage.setItem("waterCount", waterCount);
+            document.getElementById("waterCount").innerText = waterCount;
+            updateWaterFill();
+            checkGoal();
+        }
+
+        function updateWaterFill() {
+            const percentage = Math.min(100, (waterCount / waterGoal) * 100);
+            document.getElementById("waterFillAnimation").style.height = `${percentage}%`;
+        }
+
+        function checkGoal() {
+            if (waterCount >= waterGoal && !goalReached) {
+                alert("Congratulations! You've reached your water intake goal!");
+                goalReached = true;
+            } else if (waterCount < waterGoal) {
+                goalReached = false;
+            }
+        }
+
+        function setWaterGoal() {
+            let goal = prompt("Enter your daily water intake goal (in glasses):", waterGoal);
+            if (goal && !isNaN(goal) && goal > 0) {
+                waterGoal = parseInt(goal);
+                localStorage.setItem("waterGoal", waterGoal);
+                document.getElementById("waterGoalDisplay").innerText = `/ ${waterGoal} glasses`;
+                updateWaterFill();
+                checkGoal();
+            }
+        }
+
+        function clearWaterData() {
+            localStorage.removeItem("waterCount");
+            localStorage.removeItem("waterGoal");
+            waterCount = 0;
+            waterGoal = 8;
+            goalReached = false;
+            document.getElementById("waterCount").innerText = "0";
+            document.getElementById("waterGoalDisplay").innerText = "/ 8 glasses";
+            updateWaterFill();
+        }
+
+        // Initialize charts when the document is loaded
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize water display
+            document.getElementById("waterCount").innerText = waterCount;
+            document.getElementById("waterGoalDisplay").innerText = `/ ${waterGoal} glasses`;
+            updateWaterFill();
+
+            // Initialize Daily Calories Chart
+            const calorieChart = echarts.init(document.getElementById('calorieChart'));
+            const currentCalories = parseInt(document.getElementById("currentCalories").textContent, 10);
+            const calorieGoal = parseInt(document.getElementById("calorieGoal").textContent, 10);
+
+            function renderCalorieChart(current, goal) {
+                const chartOption = {
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 180,
+                        endAngle: 0,
+                        min: 0,
+                        max: goal,
+                        progress: {
+                            show: true,
+                            width: 18,
+                            itemStyle: {
+                                color: function() {
+                                    const percentage = (current / goal) * 100;
+                                    if (current > goal) return '#ff4d4f';        // Red when exceeding goal
+                                    if (percentage >= 80) return '#faad14';      // Orange when >= 80%
+                                    return '#2E7D32';                           // Green when < 80%
+                                }
+                            }
+                        },
+                        pointer: {
+                            show: false
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                width: 18,
+                                color: [[1, '#E8F5E9']]
+                            }
+                        },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        axisLabel: { show: false },
+                        title: { show: false },
+                        detail: {
+                            show: true,
+                            fontSize: 14,
+                            offsetCenter: [0, '20%'],
+                            formatter: `${current} / ${goal} kcal`
+                        },
+                        data: [{
+                            value: current
+                        }]
+                    }]
+                };
+                calorieChart.setOption(chartOption);
+            }
+
+            // Initial render
+            renderCalorieChart(currentCalories, calorieGoal);
+
+            // Check if goal is reached
+            if (currentCalories >= calorieGoal) {
+                showGoalNotification();
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                calorieChart.resize();
+            });
+        });
+
+        // Profile photo upload
+        document.getElementById('photoUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newPhotoSrc = e.target.result;
+                    document.getElementById('profilePhoto').src = newPhotoSrc;
+                    document.getElementById('profileBtn').querySelector('img').src = newPhotoSrc;
+                    localStorage.setItem('profilePhoto', newPhotoSrc);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Toggle Password Visibility
+        document.getElementById('togglePasswordVisibility').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('ri-eye-line');
+                eyeIcon.classList.add('ri-eye-off-line');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('ri-eye-off-line');
+                eyeIcon.classList.add('ri-eye-line');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            window.location.href = "/logout";
+        }
+
+        // Exercise Data
+        const exercises = [
+            { name: 'Running', type: 'Cardio', caloriePerUnit: 10, unit: 'minutes' },
+            { name: 'Cycling', type: 'Cardio', caloriePerUnit: 8, unit: 'minutes' },
+            { name: 'Swimming', type: 'Cardio', caloriePerUnit: 12, unit: 'minutes' },
+            { name: 'Push-Ups', type: 'Strength', caloriePerUnit: 0.5, unit: 'reps' },
+            { name: 'Sit-Ups', type: 'Strength', caloriePerUnit: 0.3, unit: 'reps' },
+            { name: 'Squats', type: 'Strength', caloriePerUnit: 0.4, unit: 'reps' },
+            { name: 'Yoga', type: 'Flexibility', caloriePerUnit: 4, unit: 'minutes' },
+            { name: 'Pilates', type: 'Flexibility', caloriePerUnit: 5, unit: 'minutes' }
+        ];
+
+        let selectedExercise = null;
+        let activityTimeline = [];
+
+        // Initialize Exercise Suggestions
+        function initExerciseSuggestions() {
+            const container = document.getElementById('exerciseSuggestions');
+            container.innerHTML = exercises.map(exercise => `
+                <button onclick="selectExercise('${exercise.name}')" 
+                        class="p-3 bg-primary/10 rounded hover:bg-primary/20 transition-colors duration-300 text-left">
+                    <p class="font-medium">${exercise.name}</p>
+                    <p class="text-sm text-gray-600">${exercise.type}</p>
+                </button>
+            `).join('');
+        }
+
+        // Select Exercise
+        function selectExercise(exerciseName) {
+            selectedExercise = exercises.find(e => e.name === exerciseName);
+            document.getElementById('exerciseTitle').textContent = `${selectedExercise.name} (${selectedExercise.unit})`;
+            document.getElementById('exerciseModal').classList.add('hidden');
+            document.getElementById('exerciseCountModal').classList.remove('hidden');
+        }
+
+        // Replace the existing logExercise function with this:
+        function logExercise() {
+            const count = document.getElementById('exerciseCount').value;
+            if (!count || count < 1) {
+                alert("Please enter a valid number");
+                return;
+            }
+            
+            const caloriesBurned = Math.round(count * selectedExercise.caloriePerUnit);
+            
+            // Create form data and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/add-exercise';
+            
+            const exerciseData = {
+                'exercise_name': selectedExercise.name,
+                'duration': count,
+                'calories_burned': caloriesBurned
+            };
+            
+            for (const [key, value] of Object.entries(exerciseData)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        // Remove or comment out these functions as they're no longer needed
+        // addExerciseToTimeline()
+        // updateActivityTimeline()
+
+        // Add Exercise to Timeline
+        function addExerciseToTimeline(name, count, calories) {
+            activityTimeline.unshift({ name, count, calories });
+            if (activityTimeline.length > 4) activityTimeline.pop();
+            updateActivityTimeline();
+        }
+// Add this to your existing JavaScript section
+function updateAverageCalories() {
+    fetch('/api/average-calories')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('avgDailyCalories').textContent = `${data.avg_calories}`;
+            document.getElementById('avgDailyBurned').textContent = `${data.avg_burned}`;
+        })
+        .catch(error => console.error('Error fetching average calories:', error));
+}
+
+// Add this to your DOMContentLoaded event listener
+document.addEventListener("DOMContentLoaded", function() {
+    updateAverageCalories();
+    // Update every 5 minutes
+    setInterval(updateAverageCalories, 300000);
+});
+
+        // Update Activity Timeline Display
+        function updateActivityTimeline() {
+            const timeline = document.getElementById('activityTimeline');
+            const noActivitiesMessage = document.getElementById('noActivitiesMessage');
+            timeline.innerHTML = '';
+
+            if (activityTimeline.length === 0) {
+                noActivitiesMessage.classList.remove('hidden');
+            } else {
+                noActivitiesMessage.classList.add('hidden');
+                activityTimeline.forEach(activity => {
+                    const activityElement = `
+                        <div class="flex items-center p-3 border rounded-lg hover:bg-gray-50">
+                            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full">
+                                <i class="ri-run-line text-primary"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-medium">${activity.name} (${activity.count} ${selectedExercise.unit})</p>
+                                <p class="text-sm text-gray-600">~${activity.calories} kcal burned</p>
+                            </div>
+                        </div>
+                    `;
+                    timeline.insertAdjacentHTML('beforeend', activityElement);
+                });
+            }
+        }
+
+        // Modal Control Functions
+        function closeAllModals() {
+            document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+                modal.classList.add('hidden');
+            });
+            document.getElementById('exerciseCount').value = '';
+            selectedExercise = null;
+        }
+
+        function openWeeklyProgressModal() {
+    document.getElementById('weeklyProgressModal').classList.remove('hidden');
+    
+    const weeklyCaloriesChart = echarts.init(document.getElementById('weeklyCaloriesChart'));
+    
+    fetch('/api/weekly-calories')
+        .then(response => response.json())
+        .then(data => {
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['Calories Intake', 'Calories Burned'],
+                    top: '2%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.days,
+                    axisLine: { lineStyle: { color: '#ccc' } },
+                    axisLabel: { 
+                        color: '#666',
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Calories',
+                    min: 0,
+                    axisLine: { lineStyle: { color: '#ccc' } },
+                    axisLabel: { color: '#666' }
+                },
+                series: [
+                    {
+                        name: 'Calories Intake',
+                        type: 'bar',
+                        itemStyle: { color: '#2E7D32' },
+                        barWidth: '30%',
+                        data: data.calories_intake
+                    },
+                    {
+                        name: 'Calories Burned',
+                        type: 'bar',
+                        itemStyle: { color: '#FF5722' },
+                        barWidth: '30%',
+                        data: data.calories_burned
+                    }
+                ],
+                grid: {
+                    left: '10%',
+                    right: '10%',
+                    bottom: '20%',
+                    top: '15%',
+                    containLabel: true
+                }
+            };
+            
+            weeklyCaloriesChart.setOption(option);
+            document.getElementById('weekTotalIntake').textContent = 
+                data.calories_intake.reduce((a, b) => a + b, 0);
+            document.getElementById('weekTotalBurned').textContent = 
+                data.calories_burned.reduce((a, b) => a + b, 0);
+        })
+        .catch(error => console.error('Error fetching weekly data:', error));
+
+    // Handle resize
+    window.addEventListener('resize', () => weeklyCaloriesChart.resize());
+}
+function updateWeeklyProgress() {
+    fetch('/api/weekly-calories')
+        .then(response => response.json())
+        .then(data => {
+            // Update the weekly totals
+            document.getElementById('weekTotalIntake').textContent = 
+                data.calories_intake.reduce((a, b) => a + b, 0);
+            document.getElementById('weekTotalBurned').textContent = 
+                data.calories_burned.reduce((a, b) => a + b, 0);
+        })
+        .catch(error => console.error('Error updating weekly progress:', error));
+}
+            
+            fetch('/api/weekly-calories')
+                .then(response => response.json())
+                .then(data => {
+                    option.xAxis.data = data.days;
+                    option.series[0].data = data.calories_intake;
+                    option.series[1].data = data.calories_burned;
+                    weeklyCaloriesChart.setOption(option);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+    
+            window.addEventListener('resize', () => weeklyCaloriesChart.resize());
+
+        function closeWeeklyProgressModal() {
+            document.getElementById('weeklyProgressModal').classList.add('hidden');
+        }
+
+        // Event listeners for opening modals
+        document.getElementById('logMealBtn').addEventListener('click', () => {
+            closeAllModals();
+            document.getElementById('logMealModal').classList.remove('hidden');
+        });
+        
+        document.getElementById('addExerciseBtn').addEventListener('click', () => {
+            closeAllModals();
+            initExerciseSuggestions();
+            document.getElementById('exerciseModal').classList.remove('hidden');
+        });
+        
+        document.getElementById('setGoalsBtn').addEventListener('click', () => {
+            closeAllModals();
+            document.getElementById('setGoalsModal').classList.remove('hidden');
+        });
+        
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            closeAllModals();
+            document.getElementById('profileModal').classList.remove('hidden');
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            const modals = document.querySelectorAll('[id$="Modal"]:not(.hidden)');
+            modals.forEach(modal => {
+                if (e.target === modal) {
+                    closeAllModals();
+                }
+            });
+        });
+
+        // Function to show user stage modal
+        function showUserStage() {
+            fetch('/api/user-stage')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stage information
+                    const stageInfo = `
+                        <div class="fixed inset-0 bg-black/50 z-[60]" id="userStageModal">
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-white rounded-lg shadow-xl p-6">
+                                <h3 class="text-xl font-semibold mb-4">${data.stage}</h3>
+                                <p class="text-gray-600 mb-4">${data.description}</p>
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div class="text-center p-3 bg-primary/10 rounded-lg">
+                                        <p class="text-2xl font-bold text-primary">${data.stats.active_days}</p>
+                                        <p class="text-sm text-gray-600">Active Days</p>
+                                    </div>
+                                    <div class="text-center p-3 bg-primary/10 rounded-lg">
+                                        <p class="text-2xl font-bold text-primary">${data.stats.exercise_days}</p>
+                                        <p class="text-sm text-gray-600">Exercise Days</p>
+                                    </div>
+                                </div>
+                                <button onclick="closeAllModals()" 
+                                        class="w-full bg-primary text-white p-2 rounded hover:bg-secondary transition-colors duration-300">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', stageInfo);
+                })
+                .catch(error => console.error('Error fetching user stage:', error));
+        }
+
+        // Function to update monthly progress
+// Add this to your existing JavaScript section
+function updateMonthlyProgress() {
+    fetch('/api/monthly-progress')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('monthlyCaloriesGained').textContent = data.calories_gained;
+            document.getElementById('monthlyCaloriesBurned').textContent = data.calories_burned;
+        })
+        .catch(error => console.error('Error fetching monthly progress:', error));
+}
+
+// Add this to your DOMContentLoaded event listener
+document.addEventListener("DOMContentLoaded", function() {
+    updateMonthlyProgress();
+    // Update every 5 minutes
+    setInterval(updateMonthlyProgress, 300000);
+});
+        // Function to set monthly target
+        function setMonthlyTarget() {
+            const target = document.getElementById('monthlyTargetInput').value;
+            if (!target || target < 1) {
+                alert('Please enter a valid target');
+                return;
+            }
+
+            fetch('/api/monthly-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ target: parseInt(target) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateMonthlyProgress();
+                closeAllModals();
+            })
+            .catch(error => console.error('Error setting monthly target:', error));
+        }
+
+        // Function to open monthly target modal
+        function openMonthlyTargetModal() {
+            document.getElementById('monthlyTargetModal').classList.remove('hidden');
+        }
+
+        // Add this to your DOMContentLoaded event listener
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize monthly progress
+            updateMonthlyProgress();
+            
+            // Update monthly progress every 5 minutes
+            setInterval(updateMonthlyProgress, 300000);
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAllModals();
+            }
+        });
+
+        function openCalorieGoalModal() {
+            closeAllModals(); // Ensure no other modals are open
+            const modal = document.getElementById('calorieGoalModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            } else {
+                console.error('Calorie Goal Modal not found!');
+            }
+        }
+    </script>
+</body>
+</html>

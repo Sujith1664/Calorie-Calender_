@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalorieTrack - Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#81C784'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#F1F8E9] min-h-screen">
+    <!-- Navigation Bar -->
+    <div class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="/" class="text-2xl font-['Pacifico'] text-primary">CalorieCalender</a>
+                <div class="hidden md:flex space-x-6">
+                    <a href="/" class="text-gray-600 hover:text-primary transition-colors duration-300">Home</a>
+                    <a href="#" class="text-primary">View Schedule</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                {% if session["phone"] %}
+                <button id="profileBtn" class="w-10 h-10 flex items-center justify-center">
+                    <img src="https://public.readdy.ai/ai/img_res/4feed2ac58f21cf0035ac6196c5b43fa.jpg" class="w-8 h-8 rounded-full object-cover">
+                </button>
+                {% else %}
+                <a href="/login">Login</a> | <a href="/register">Register</a>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+
+    <div class="pt-20 container mx-auto px-4">
+        <!-- Schedule Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Your Daily Schedule</h1>
+            <p class="text-gray-600">Plan and track your daily activities</p>
+        </div>
+
+        <!-- Schedule Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Morning Schedule -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-sun-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-4">Morning</h3>
+                <div class="space-y-3">
+                    {% if schedule.morning.activity %}
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <p class="font-medium">{{ schedule.morning.activity }}</p>
+                        <p class="text-sm text-gray-600">Goal: {{ schedule.morning.goal }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 italic">No activity scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Afternoon Schedule -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-sun-foggy-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-4">Afternoon</h3>
+                <div class="space-y-3">
+                    {% if schedule.afternoon.activity %}
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <p class="font-medium">{{ schedule.afternoon.activity }}</p>
+                        <p class="text-sm text-gray-600">Goal: {{ schedule.afternoon.goal }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 italic">No activity scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Evening Schedule -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-moon-foggy-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-4">Evening</h3>
+                <div class="space-y-3">
+                    {% if schedule.evening.activity %}
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <p class="font-medium">{{ schedule.evening.activity }}</p>
+                        <p class="text-sm text-gray-600">Goal: {{ schedule.evening.goal }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 italic">No activity scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Night Schedule -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mb-4">
+                    <i class="ri-moon-line text-primary text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-4">Night</h3>
+                <div class="space-y-3">
+                    {% if schedule.night.activity %}
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <p class="font-medium">{{ schedule.night.activity }}</p>
+                        <p class="text-sm text-gray-600">Goal: {{ schedule.night.goal }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 italic">No activity scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8 flex justify-center">
+            <a href="/" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary transition-colors duration-300 flex items-center space-x-2">
+                <i class="ri-arrow-left-line"></i>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
